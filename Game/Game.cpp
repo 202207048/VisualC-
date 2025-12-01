@@ -386,7 +386,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DeleteObject(hFont);
             */
 
-
+            //적 = 파란색 음식 = 빨간색, 노란색, 점수 = 초록색 
+            //적 하나 더 추가, 특별 음식 추가, 배경색 바뀌게
 
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
             Rectangle(hdc, player.left, player.top, player.right, player.bottom);
@@ -410,6 +411,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hdc, greenBrush);
             Ellipse(hdc, score.left, score.top, score.right, score.bottom);
             DeleteObject(greenBrush);
+
+            HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
+            SelectObject(hdc, eyeBrush);
+            Ellipse(hdc, player.left + 20, player.top + 20, player.left + 45, player.top + 45);
+            Ellipse(hdc, player.right - 45, player.top + 20, player.right - 20, player.top + 45);
+            DeleteObject(eyeBrush);
+
+            HBRUSH pupilBrush = CreateSolidBrush(RGB(0, 0, 0));
+            SelectObject(hdc, pupilBrush);
+            Ellipse(hdc, player.left + 30, player.top + 30, player.left + 40, player.top + 40);
+            Ellipse(hdc, player.right - 35, player.top + 30, player.right - 25, player.top + 40);
+            DeleteObject(pupilBrush);
             
 
             EndPaint(hWnd, &ps);
