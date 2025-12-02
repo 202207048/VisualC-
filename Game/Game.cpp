@@ -124,7 +124,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-RECT player, food1, food2, score, enemy;
+RECT player, food1, food2, score, enemy, enemy2;
 int player_size = 100;  /// 플레이어 크기
 int player_life = 3;    ///플레이어 생명력
 int player_score = 0;
@@ -132,6 +132,8 @@ int food_size = 50;
 int enemy_size = 100;
 int score_size = 50;
 int fall_speed = 5;
+//눈동자 움직임
+int lookdir = 0; //0 = 정면 7 = 오른쪽 -7 = 왼쪽
 BOOL g_gameover;        ///게임 오버
 int player_speed = 30;  ///플레이어 이동 속도
 
@@ -162,6 +164,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         enemy.top = 0;
         enemy.right = enemy.left + enemy_size;
         enemy.bottom = enemy.top + enemy_size;
+
+        enemy2.left = rand() % (800 - enemy_size);
+        enemy2.top = 0;
+        enemy2.right = enemy2.left + enemy_size;
+        enemy2.bottom = enemy2.top + enemy_size;
 
         score.left = rand() % (800 - score_size);
         score.top = 0;
@@ -196,7 +203,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             food2.right = food2.left + food_size;
             food2.bottom = food2.top + food_size;
         }
-
+        //적 떨구기
         enemy.top += fall_speed;
         enemy.bottom += fall_speed;
 
@@ -206,6 +213,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             enemy.top = -200;
             enemy.right = enemy.left + enemy_size;
             enemy.bottom = enemy.top + enemy_size;
+        }
+        enemy2.top += fall_speed;
+        enemy2.bottom += fall_speed;
+
+        if (enemy2.top > 600)
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
         }
 
         score.top += fall_speed;
@@ -220,7 +237,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         RECT ret;
-        if (IntersectRect(&ret, &player, &enemy))
+        if (IntersectRect(&ret, &player, &enemy)) //적과 부딛히면 생명력 -
         {
             enemy.left = rand() % (800 - enemy_size);
             enemy.top = -200;
@@ -236,7 +253,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 MessageBox(hWnd, L"생명 소진", L"게임 오버", MB_OK);
             }
         }
-        if (IntersectRect(&ret, &player, &food1))
+        if (IntersectRect(&ret, &player, &enemy2)) //적과 부딛히면 생명력 -
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
+            player_life--;
+        }
+        if (IntersectRect(&ret, &player, &food1)) //음식을 먹으면 생명력 +1
         {
             food1.left = rand() % (800 - food_size);
             food1.top = -200;
@@ -245,10 +270,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             player_life++;
             if (3 < player_life)
             {
-                player_life = 3;
+                player_life = 3; //최대 생명력 3으로 고정
             }
         }
-        if (IntersectRect(&ret, &player, &food2))
+        if (IntersectRect(&ret, &player, &food2)) //음식 2 먹으면 생명력 +!
         {
             food2.left = rand() % (800 - food_size);
             food2.top = -200;
@@ -257,10 +282,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             player_life++;
             if (3 < player_life)
             {
-                player_life = 3;
+                player_life = 3; //최대 생명력 3으로 고정
             }
         }
-        if (IntersectRect(&ret, &player, &score))
+        if (IntersectRect(&ret, &player, &score)) //점수 + 20
         {
             score.left = rand() % (800 - score_size);
             score.top = -200;
@@ -268,6 +293,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             score.bottom = score.top + score_size;
             player_score += 20;
         }
+
+        //상관 없는것들끼리 부딪히면 위치 초기화 (겹치지 않게)
 
         if (IntersectRect(&ret, &food1, &food2))
         {
@@ -311,6 +338,36 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             score.right = score.left + score_size;
             score.bottom = score.top + score_size;  
         }
+        if (IntersectRect(&ret, &enemy, &enemy2))
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
+        }
+
+        if (IntersectRect(&ret, &food1, &enemy2))
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
+        }
+
+        if (IntersectRect(&ret, &food2, &enemy2))
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
+        }
+        if (IntersectRect(&ret, &score, &enemy2))
+        {
+            enemy2.left = rand() % (800 - enemy_size);
+            enemy2.top = -200;
+            enemy2.right = enemy2.left + enemy_size;
+            enemy2.bottom = enemy2.top + enemy_size;
+        }
 
         InvalidateRect(hWnd, NULL, TRUE);
     }
@@ -326,12 +383,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             player.left -= player_speed;
             player.right -= player_speed;
+            lookdir = -7;
         }
         break;
         case VK_RIGHT:
         {
             player.left += player_speed;
             player.right += player_speed;
+            lookdir = 7;
         }
         break;
         }
@@ -340,7 +399,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     
         break;
-
+    case WM_KEYUP: //키 미입력시 눈 제자리로
+    {
+        lookdir = 0;
+    }
+        break;
 
     case WM_COMMAND:
         {
@@ -365,7 +428,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
 
             ///점수 텍스트
-            /*
+            
             WCHAR scoreText[100];
             wsprintf(scoreText, L"체력 : %d                                                                       점수 : %d", player_life, player_score);
 
@@ -384,12 +447,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // 폰트 복원 및 삭제
             SelectObject(hdc, hOldFont);
             DeleteObject(hFont);
-            */
+            
 
             //적 = 파란색 음식 = 빨간색, 노란색, 점수 = 초록색 
             //적 하나 더 추가, 특별 음식 추가, 배경색 바뀌게
 
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+            //플레이어
             Rectangle(hdc, player.left, player.top, player.right, player.bottom);
             ///food1
             HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
@@ -401,12 +465,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hdc, yellowBrush);
             Ellipse(hdc, food2.left, food2.top, food2.right, food2.bottom);
             DeleteObject(yellowBrush);
-
+            //적, 적2
             HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
             SelectObject(hdc, blueBrush);
             Ellipse(hdc, enemy.left, enemy.top, enemy.right, enemy.bottom);
+            Ellipse(hdc, enemy2.left, enemy2.top, enemy2.right, enemy2.bottom);
             DeleteObject(blueBrush);
-
+            
+             
+            
+            //점수
             HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
             SelectObject(hdc, greenBrush);
             Ellipse(hdc, score.left, score.top, score.right, score.bottom);
@@ -420,8 +488,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             HBRUSH pupilBrush = CreateSolidBrush(RGB(0, 0, 0));
             SelectObject(hdc, pupilBrush);
-            Ellipse(hdc, player.left + 30, player.top + 30, player.left + 40, player.top + 40);
-            Ellipse(hdc, player.right - 35, player.top + 30, player.right - 25, player.top + 40);
+            Ellipse(hdc, player.left + 30 + lookdir, player.top + 30, player.left + 40 + lookdir, player.top + 40);
+            Ellipse(hdc, player.right - 35 + lookdir, player.top + 30, player.right - 25 + lookdir, player.top + 40);
             DeleteObject(pupilBrush);
             
 
