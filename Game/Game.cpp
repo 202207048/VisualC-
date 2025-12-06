@@ -136,6 +136,9 @@ int fall_speed = 5;
 int lookdir = 0; //0 = 정면 7 = 오른쪽 -7 = 왼쪽
 BOOL g_gameover;        ///게임 오버
 int player_speed = 30;  ///플레이어 이동 속도
+//키보드 눌림 상태 저장
+BOOL key_left = FALSE;
+BOOL key_right = FALSE;
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -180,6 +183,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_TIMER:
     {
+        // 좌우 이동
+        if (key_left == TRUE)
+        {
+            player.left -= player_speed;
+            player.right -= player_speed;
+        }
+        if (key_right == TRUE)
+        {
+            player.left += player_speed;
+            player.right += player_speed;
+        }
+
         ///음식 1 떨구기
         food1.top += fall_speed;
         food1.bottom += fall_speed;
@@ -393,15 +408,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case VK_LEFT:
         {
-            player.left -= player_speed;
-            player.right -= player_speed;
+            key_left = TRUE;
+            
             lookdir = -7;
         }
         break;
         case VK_RIGHT:
         {
-            player.left += player_speed;
-            player.right += player_speed;
+            key_right = TRUE;
+            
             lookdir = 7;
         }
         break;
@@ -413,6 +428,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_KEYUP: //키 미입력시 눈 제자리로
     {
+        switch (wParam)
+        {
+        case VK_LEFT:
+        {
+            key_left = FALSE;
+        }
+            break;
+        case VK_RIGHT:
+        {
+            key_right = FALSE;
+        }
+            break;
+        }
         lookdir = 0;
     }
         break;
