@@ -75,7 +75,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GAME));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.hbrBackground  = NULL;
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_GAME);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -124,7 +124,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-RECT player, food1, food2, score, enemy, enemy2;
+RECT player, food1, food2, score, score2, enemy, enemy2;
 int player_size = 100;  /// 플레이어 크기
 int player_life = 3;    ///플레이어 생명력
 int player_score = 0;
@@ -139,6 +139,8 @@ int player_speed = 30;  ///플레이어 이동 속도
 //키보드 눌림 상태 저장
 BOOL key_left = FALSE;
 BOOL key_right = FALSE;
+HBITMAP hBgImages[4];
+
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
@@ -177,7 +179,28 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         score.top = 0;
         score.right = score.left + score_size;
         score.bottom = score.top + score_size;
+
+        score2.left = rand() % (800 - score_size);
+        score2.top = 0;
+        score2.right = score2.left + score_size;
+        score2.bottom = score2.top + score_size;
+
+
         SetTimer(hWnd, 1, 30, NULL);
+        //비트맵
+        hBgImages[0] = (HBITMAP)LoadImage(NULL, L"white.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
+        hBgImages[1] = (HBITMAP)LoadImage(NULL, L"progress2.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
+        hBgImages[2] = (HBITMAP)LoadImage(NULL, L"progress4.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
+        hBgImages[3] = (HBITMAP)LoadImage(NULL, L"progress3.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
+        
+        
+
+        if (hBgImages[0] == NULL)
+        {
+            MessageBox(hWnd, L"이미지 로드 실패! white.bmp 파일확인!", L"에러", MB_OK);
+        }
+
+        
     }
         break;
 
@@ -251,6 +274,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             score.bottom = score.top + score_size;
         }
 
+        score2.top += fall_speed;
+        score2.bottom += fall_speed;
+
+        if (score2.top > 600)
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+
         RECT ret;
         if (IntersectRect(&ret, &player, &enemy)) //적과 부딛히면 생명력 -
         {
@@ -288,7 +322,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 player_life = 3; //최대 생명력 3으로 고정
             }
         }
-        if (IntersectRect(&ret, &player, &food2)) //음식 2 먹으면 생명력 +!
+        if (IntersectRect(&ret, &player, &food2)) //음식 2 먹으면 생명력 +1
         {
             food2.left = rand() % (800 - food_size);
             food2.top = -200;
@@ -306,6 +340,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             score.top = -200;
             score.right = score.left + score_size;
             score.bottom = score.top + score_size;
+            player_score += 20;
+        }
+
+        if (IntersectRect(&ret, &player, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
             player_score += 20;
         }
 
@@ -383,6 +426,46 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             enemy2.right = enemy2.left + enemy_size;
             enemy2.bottom = enemy2.top + enemy_size;
         }
+
+        if (IntersectRect(&ret, &score, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+
+        if (IntersectRect(&ret, &food1, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+
+        if (IntersectRect(&ret, &food2, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+
+        if (IntersectRect(&ret, &enemy, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+        if (IntersectRect(&ret, &enemy2, &score2))
+        {
+            score2.left = rand() % (800 - score_size);
+            score2.top = -200;
+            score2.right = score2.left + score_size;
+            score2.bottom = score2.top + score_size;
+        }
+
         // 오른쪽 끝으로 나갈 시 왼쪽으로 텔레포트
         if (player.left > 800)
         {
@@ -396,13 +479,76 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             player.left = 700;
         }
 
-        InvalidateRect(hWnd, NULL, TRUE);
+        InvalidateRect(hWnd, NULL, FALSE);
     }
         break;
     case WM_KEYDOWN:
     {
+
+        if (wParam == 'R' || wParam == 'r')
+        {
+            if (g_gameover == TRUE)
+            {
+                // 변수 초기화
+                player_score = 0;
+                player_life = 3;
+                fall_speed = 5;
+                g_gameover = FALSE; // 게임 재개
+
+                // 위치 초기화
+               // 적(Enemy) 초기화 (크기: enemy_size = 100)
+                enemy.left = rand() % (800 - enemy_size);
+                enemy.top = 0;
+                enemy.right = enemy.left + enemy_size;   // 왼쪽 + 100
+                enemy.bottom = enemy.top + enemy_size;   // 위 + 100 (정사각형 유지)
+
+                // 음식1(Food1) 초기화 (크기: food_size = 50)
+                food1.left = rand() % (800 - food_size);
+                food1.top = 0; 
+                food1.right = food1.left + food_size;
+                food1.bottom = food1.top + food_size;
+
+                // 음식2(Food2) 초기화
+                food2.left = rand() % (800 - food_size);
+                food2.top = 0;
+                food2.right = food2.left + food_size;
+                food2.bottom = food2.top + food_size;
+
+                // 점수 아이템(Score) 초기화 (크기: score_size = 50)
+                score.left = rand() % (800 - score_size);
+                score.top = 0;
+                score.right = score.left + score_size;
+                score.bottom = score.top + score_size;
+
+                score2.left = rand() % (800 - score_size);
+                score2.top = 0;
+                score2.right = score2.left + score_size;
+                score2.bottom = score2.top + score_size;
+
+                // 플레이어 위치 초기화
+                player.left = 350;
+                player.top = 440;
+                player.right = 450; // player_size가 100이라면
+                player.bottom = 540;
+
+                //눈 위치 초기화
+                lookdir = 0;
+
+                // 키보드 상태 초기화 (중요)
+                key_left = FALSE;
+                key_right = FALSE;
+
+                // 타이머 재시작 (가장 중요)
+                SetTimer(hWnd, 1, 30, NULL);
+
+                InvalidateRect(hWnd, NULL, FALSE);
+            }
+        }
+
         if (g_gameover)
             break;
+        
+    
 
         switch (wParam)
         {
@@ -422,7 +568,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
         }
 
-        InvalidateRect(hWnd, NULL, TRUE);
+        InvalidateRect(hWnd, NULL, FALSE);
     }
     
         break;
@@ -467,7 +613,34 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
 
-           
+            HDC hMemDC = CreateCompatibleDC(hdc);
+            int imgIndex = 0;
+
+            int cycle_score = player_score % 400;
+
+            if (cycle_score < 150)
+            {
+                imgIndex = 0;
+            }
+            else if (cycle_score < 200)
+            {
+                imgIndex = 1;
+            }
+            else if (cycle_score < 350)
+            {
+                imgIndex = 2;
+            }
+            else
+            {
+                imgIndex = 3;
+            }
+
+            HBITMAP hOldBitmap = (HBITMAP)SelectObject(hMemDC, hBgImages[imgIndex]);
+
+            BitBlt(hdc, 0, 0, 800, 600, hMemDC, 0, 0, SRCCOPY);
+
+            SelectObject(hMemDC, hOldBitmap);
+            DeleteDC(hMemDC);
 
             ///점수 텍스트
             
@@ -520,6 +693,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
             SelectObject(hdc, greenBrush);
             Ellipse(hdc, score.left, score.top, score.right, score.bottom);
+            Ellipse(hdc, score2.left, score2.top, score2.right, score2.bottom);
             DeleteObject(greenBrush);
 
             HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
@@ -539,6 +713,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
+        for (int i = 0; i < 4; i++)
+        {
+            if (hBgImages[i])
+                DeleteObject(hBgImages);
+        }
         KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
