@@ -75,7 +75,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hInstance      = hInstance;
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_GAME));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
+    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW + 1);
     wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_GAME);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
@@ -368,6 +368,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             enemy2.right = enemy2.left + enemy_size;
             enemy2.bottom = enemy2.top + enemy_size;
         }
+        // 오른쪽 끝으로 나갈 시 왼쪽으로 텔레포트
+        if (player.left > 800)
+        {
+            player.left = 0;
+            player.right = 100;
+        }
+
+        if (player.right < 0)
+        {
+            player.right = 800;
+            player.left = 700;
+        }
 
         InvalidateRect(hWnd, NULL, TRUE);
     }
@@ -426,6 +438,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
+
+           
 
             ///점수 텍스트
             
