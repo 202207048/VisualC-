@@ -6,6 +6,7 @@
 #include "time.h"
 #include <mmsystem.h>
 #pragma comment(lib, "winmm.lib");
+#pragma comment(lib, "Msimg32.lib"); //TransparentBlt(아이콘 배경 투명하게 처리)
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -142,8 +143,10 @@ int player_speed = 30;  ///플레이어 이동 속도
 //키보드 눌림 상태 저장
 BOOL key_left = FALSE;
 BOOL key_right = FALSE;
-HBITMAP hBgImages[4];
+HBITMAP hBgImages[4]; ///배경
 HBITMAP hCoinBmp; ///점수 코인 사진
+HBITMAP hEnemyBmp;  ///적 사진
+HBITMAP hPlayerBmp;
 
 
 
@@ -194,6 +197,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         //bgm, 타격음
         mciSendString(L"open \"background.mp3\" type mpegvideo alias my_bgm", NULL, 0, NULL);
         mciSendString(L"open \"hit.mp3\" type mpegvideo alias my_hit", NULL, 0, NULL);
+        mciSendString(L"open \"coin.mp3\" type mpegvideo alias my_coin", NULL, 0, NULL);
 
         mciSendString(L"play my_bgm repeat", NULL, 0, NULL);
 
@@ -215,6 +219,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (hCoinBmp == NULL)
         {
             MessageBox(hWnd, L"코인 이미지 로드 실패", L"에러", MB_OK);
+        }
+
+        hEnemyBmp = (HBITMAP)LoadImage(NULL, L"enemy.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+
+        if (hEnemyBmp == NULL)
+        {
+            MessageBox(hWnd, L"적 이미지 로드 실패", L"에러", MB_OK);
+        }
+
+        hPlayerBmp = (HBITMAP)LoadImage(NULL, L"player.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+
+        if (hPlayerBmp == NULL)
+        {
+            MessageBox(hWnd, L"플레이어 이미지 로드 실패", L"에러", MB_OK);
         }
         
     }
@@ -362,16 +380,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (IntersectRect(&ret, &player, &score)) //점수 + 20
         {
 
-            
-
             score.left = rand() % (800 - score_size);
             score.top = -200;
             score.right = score.left + score_size;
             score.bottom = score.top + score_size;
             player_score += 20;
 
-            
-            
+            //코인 먹는 소리
+            mciSendString(L"play my_coin from 0", NULL, 0, NULL);
+
             
         }
 
@@ -382,6 +399,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             score2.right = score2.left + score_size;
             score2.bottom = score2.top + score_size;
             player_score += 20;
+
+            mciSendString(L"play my_coin from 0", NULL, 0, NULL);
         }
 
         //상관 없는것들끼리 부딪히면 위치 초기화 (겹치지 않게)
@@ -676,16 +695,42 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hMemDC, hOldBitmap);
             DeleteDC(hMemDC);
 
+            ///코인 부분
             HDC hCoinDC = CreateCompatibleDC(hdc);
             HBITMAP hOldCoinBmp = (HBITMAP)SelectObject(hCoinDC, hCoinBmp);
 
             BITMAP bmpInfo;
             GetObject(hCoinBmp, sizeof(BITMAP), &bmpInfo);
-
-            StretchBlt(hdc, score.left, score.top, score.right - score.left, score.bottom - score.top, hCoinDC, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, SRCCOPY);
+            //코인 그리기
+            TransparentBlt(hdc, score.left, score.top, score.right - score.left, score.bottom - score.top, hCoinDC, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, RGB(255, 255, 255));
+            TransparentBlt(hdc, score2.left, score2.top, score2.right - score2.left, score2.bottom - score2.top, hCoinDC, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, RGB(255, 255, 255));
 
             SelectObject(hCoinDC, hOldCoinBmp);
             DeleteObject(hCoinDC);
+
+            HDC hEnemyDC = CreateCompatibleDC(hdc);
+            HBITMAP hOldEnemyBmp = (HBITMAP)SelectObject(hEnemyDC, hEnemyBmp);
+
+            BITMAP enemyInfo;
+            GetObject(hEnemyBmp, sizeof(BITMAP), &enemyInfo);
+
+            //적 그리기
+            StretchBlt(hdc, enemy.left, enemy.top, enemy.right - enemy.left, enemy.bottom - enemy.top, hEnemyDC, 0, 0, enemyInfo.bmWidth, enemyInfo.bmHeight, SRCCOPY);
+            StretchBlt(hdc, enemy2.left, enemy2.top, enemy2.right - enemy2.left, enemy2.bottom - enemy2.top, hEnemyDC, 0, 0, enemyInfo.bmWidth, enemyInfo.bmHeight, SRCCOPY);
+
+            SelectObject(hEnemyDC, hOldEnemyBmp);
+            DeleteObject(hEnemyDC);
+
+            //플레이어 그리기
+            HDC hPlayerDC = CreateCompatibleDC(hdc);
+            HBITMAP hOldPlayerBmp = (HBITMAP)SelectObject(hPlayerDC, hPlayerBmp);
+
+            BITMAP playerInfo;
+            GetObject(hPlayerBmp, sizeof(BITMAP), &playerInfo);
+
+            TransparentBlt(hdc, player.left, player.top, player.right - player.left, player.bottom - player.top, hPlayerDC, 0, 0, playerInfo.bmWidth, playerInfo.bmHeight, RGB(255, 255, 255));
+            SelectObject(hPlayerDC, hOldPlayerBmp);
+            DeleteObject(hPlayerDC);
 
             ///점수 텍스트
             
@@ -714,7 +759,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
             //플레이어
-            Rectangle(hdc, player.left, player.top, player.right, player.bottom);
+            
             ///food1
             HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
             SelectObject(hdc, redBrush);
@@ -728,8 +773,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //적, 적2
             HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
             SelectObject(hdc, blueBrush);
-            Ellipse(hdc, enemy.left, enemy.top, enemy.right, enemy.bottom);
-            Ellipse(hdc, enemy2.left, enemy2.top, enemy2.right, enemy2.bottom);
+            
             DeleteObject(blueBrush);
             
              
@@ -738,7 +782,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
             SelectObject(hdc, greenBrush);
             
-            Ellipse(hdc, score2.left, score2.top, score2.right, score2.bottom);
+            
             DeleteObject(greenBrush);
 
             HBRUSH eyeBrush = CreateSolidBrush(RGB(255, 255, 255));
@@ -760,6 +804,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         mciSendString(L"close my_bgm", NULL, 0, NULL);
         mciSendString(L"close my_hit", NULL, 0, NULL);
+        mciSendString(L"close my_coin", NULL, 0, NULL);
         for (int i = 0; i < 4; i++)
         {
             if (hBgImages[i])
@@ -767,6 +812,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         if (hCoinBmp)
             DeleteObject(hCoinBmp);
+        if (hEnemyBmp)
+            DeleteObject(hEnemyBmp);
+        if (hPlayerBmp)
+            DeleteObject(hPlayerBmp);
         KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
