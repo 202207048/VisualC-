@@ -137,11 +137,13 @@ int fall_speed = 5;
 //눈동자 움직임
 int lookdir = 0; //0 = 정면 7 = 오른쪽 -7 = 왼쪽
 BOOL g_gameover;        ///게임 오버
+BOOL g_rare = FALSE;            ///안씀
 int player_speed = 30;  ///플레이어 이동 속도
 //키보드 눌림 상태 저장
 BOOL key_left = FALSE;
 BOOL key_right = FALSE;
 HBITMAP hBgImages[4];
+HBITMAP hCoinBmp; ///점수 코인 사진
 
 
 
@@ -208,6 +210,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             MessageBox(hWnd, L"이미지 로드 실패! white.bmp 파일확인!", L"에러", MB_OK);
         }
 
+        hCoinBmp = (HBITMAP)LoadImage(NULL, L"coin.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+        
+        if (hCoinBmp == NULL)
+        {
+            MessageBox(hWnd, L"코인 이미지 로드 실패", L"에러", MB_OK);
+        }
         
     }
         break;
@@ -353,11 +361,18 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         if (IntersectRect(&ret, &player, &score)) //점수 + 20
         {
+
+            
+
             score.left = rand() % (800 - score_size);
             score.top = -200;
             score.right = score.left + score_size;
             score.bottom = score.top + score_size;
             player_score += 20;
+
+            
+            
+            
         }
 
         if (IntersectRect(&ret, &player, &score2))
@@ -661,6 +676,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             SelectObject(hMemDC, hOldBitmap);
             DeleteDC(hMemDC);
 
+            HDC hCoinDC = CreateCompatibleDC(hdc);
+            HBITMAP hOldCoinBmp = (HBITMAP)SelectObject(hCoinDC, hCoinBmp);
+
+            BITMAP bmpInfo;
+            GetObject(hCoinBmp, sizeof(BITMAP), &bmpInfo);
+
+            StretchBlt(hdc, score.left, score.top, score.right - score.left, score.bottom - score.top, hCoinDC, 0, 0, bmpInfo.bmWidth, bmpInfo.bmHeight, SRCCOPY);
+
+            SelectObject(hCoinDC, hOldCoinBmp);
+            DeleteObject(hCoinDC);
+
             ///점수 텍스트
             
             WCHAR scoreText[100];
@@ -711,7 +737,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //점수
             HBRUSH greenBrush = CreateSolidBrush(RGB(0, 255, 0));
             SelectObject(hdc, greenBrush);
-            Ellipse(hdc, score.left, score.top, score.right, score.bottom);
+            
             Ellipse(hdc, score2.left, score2.top, score2.right, score2.bottom);
             DeleteObject(greenBrush);
 
@@ -739,6 +765,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (hBgImages[i])
                 DeleteObject(hBgImages);
         }
+        if (hCoinBmp)
+            DeleteObject(hCoinBmp);
         KillTimer(hWnd, 1);
         PostQuitMessage(0);
         break;
