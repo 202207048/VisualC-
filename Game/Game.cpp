@@ -252,6 +252,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             player.right += player_speed;
         }
 
+        // 점수에 따른 떨구기 속도 조절
+        if (player_score < 200)
+        {
+            fall_speed = 5;
+        }
+        else if (player_score < 500)
+        {
+            fall_speed = 10;
+        }
+        else if (player_score < 1000)
+        {
+            fall_speed = 15;
+        }
+        else
+        {
+            fall_speed = 18;
+        }
+
         ///음식 1 떨구기
         food1.top += fall_speed;
         food1.bottom += fall_speed;
