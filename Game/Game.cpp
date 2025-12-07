@@ -4,6 +4,8 @@
 #include "framework.h"
 #include "Game.h"
 #include "time.h"
+#include <mmsystem.h>
+#pragma comment(lib, "winmm.lib");
 #define MAX_LOADSTRING 100
 
 // 전역 변수:
@@ -187,6 +189,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
         SetTimer(hWnd, 1, 30, NULL);
+        //bgm, 타격음
+        mciSendString(L"open \"background.mp3\" type mpegvideo alias my_bgm", NULL, 0, NULL);
+        mciSendString(L"open \"hit.mp3\" type mpegvideo alias my_hit", NULL, 0, NULL);
+
+        mciSendString(L"play my_bgm repeat", NULL, 0, NULL);
+
         //비트맵
         hBgImages[0] = (HBITMAP)LoadImage(NULL, L"white.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
         hBgImages[1] = (HBITMAP)LoadImage(NULL, L"progress2.bmp", IMAGE_BITMAP, 800, 600, LR_LOADFROMFILE);
@@ -293,13 +301,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             enemy.right = enemy.left + enemy_size;
             enemy.bottom = enemy.top + enemy_size;
             player_life--;
+            //피격음
+            mciSendString(L"play my_hit from 0", NULL, 0, NULL);
 
             if (0 > player_life)
             {
                 player_life = 0;
                 KillTimer(hWnd, 1);
                 g_gameover = TRUE;
+                mciSendString(L"stop my_bgm", NULL, 0, NULL); //죽었을 시 bgm 멈추기
                 MessageBox(hWnd, L"생명 소진", L"게임 오버", MB_OK);
+            }
+            else
+            {
+                mciSendString(L"play my_hit from 0", NULL, 0, NULL); //아니면 다시 재생
             }
         }
         if (IntersectRect(&ret, &player, &enemy2)) //적과 부딛히면 생명력 -
@@ -309,6 +324,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             enemy2.right = enemy2.left + enemy_size;
             enemy2.bottom = enemy2.top + enemy_size;
             player_life--;
+            //피격음
+            mciSendString(L"play my_hit from 0", NULL, 0, NULL);
         }
         if (IntersectRect(&ret, &player, &food1)) //음식을 먹으면 생명력 +1
         {
@@ -538,6 +555,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 key_left = FALSE;
                 key_right = FALSE;
 
+                mciSendString(L"play my_bgm from 0 repeat", NULL, 0, NULL);
+
                 // 타이머 재시작 (가장 중요)
                 SetTimer(hWnd, 1, 30, NULL);
 
@@ -713,6 +732,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
+        mciSendString(L"close my_bgm", NULL, 0, NULL);
+        mciSendString(L"close my_hit", NULL, 0, NULL);
         for (int i = 0; i < 4; i++)
         {
             if (hBgImages[i])
