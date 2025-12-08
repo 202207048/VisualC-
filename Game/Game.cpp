@@ -146,7 +146,9 @@ BOOL key_right = FALSE;
 HBITMAP hBgImages[4]; ///배경
 HBITMAP hCoinBmp; ///점수 코인 사진
 HBITMAP hEnemyBmp;  ///적 사진
-HBITMAP hPlayerBmp;
+HBITMAP hPlayerBmp; ///플레이어 사진
+HBITMAP hFoodBmp;   ///음식 사진
+HBITMAP hFood2Bmp;  ///음식 사진 2
 
 
 
@@ -235,6 +237,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             MessageBox(hWnd, L"플레이어 이미지 로드 실패", L"에러", MB_OK);
         }
         
+    }
+
+    hFoodBmp = (HBITMAP)LoadImage(NULL, L"food1.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+
+    if (hFoodBmp == NULL)
+    {
+        MessageBox(hWnd, L"음식 이미지 로드 실패", L"에러", MB_OK);
+    }
+
+    hFood2Bmp = (HBITMAP)LoadImage(NULL, L"food2.bmp", IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
+
+    if (hFood2Bmp == NULL)
+    {
+        MessageBox(hWnd, L"음식 이미지 2 로드 실패", L"에러", MB_OK);
     }
         break;
 
@@ -725,7 +741,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             SelectObject(hCoinDC, hOldCoinBmp);
             DeleteObject(hCoinDC);
-
+            //적 부분
             HDC hEnemyDC = CreateCompatibleDC(hdc);
             HBITMAP hOldEnemyBmp = (HBITMAP)SelectObject(hEnemyDC, hEnemyBmp);
 
@@ -749,6 +765,27 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             TransparentBlt(hdc, player.left, player.top, player.right - player.left, player.bottom - player.top, hPlayerDC, 0, 0, playerInfo.bmWidth, playerInfo.bmHeight, RGB(255, 255, 255));
             SelectObject(hPlayerDC, hOldPlayerBmp);
             DeleteObject(hPlayerDC);
+
+            //음식 1
+            HDC hFoodDC = CreateCompatibleDC(hdc);
+            HBITMAP hOldFoodBmp = (HBITMAP)SelectObject(hFoodDC, hFoodBmp);
+
+            BITMAP foodInfo;
+            GetObject(hFoodBmp, sizeof(BITMAP), &foodInfo);
+
+            TransparentBlt(hdc, food1.left, food1.top, food1.right - food1.left, food1.bottom - food1.top, hFoodDC, 0, 0, foodInfo.bmWidth, foodInfo.bmHeight, RGB(255, 255, 255));
+            SelectObject(hFoodDC, hOldFoodBmp);
+            DeleteObject(hFoodDC);
+
+            HDC hFood2DC = CreateCompatibleDC(hdc);
+            HBITMAP hOldFood2Bmp = (HBITMAP)SelectObject(hFood2DC, hFood2Bmp);
+
+            BITMAP food2Info;
+            GetObject(hFood2Bmp, sizeof(BITMAP), &food2Info);
+
+            TransparentBlt(hdc, food2.left, food2.top, food2.right - food2.left, food2.bottom - food2.top, hFood2DC, 0, 0, food2Info.bmWidth, food2Info.bmHeight, RGB(255, 255, 255));
+            SelectObject(hFood2DC, hOldFood2Bmp);
+            DeleteObject(hFood2DC);
 
             ///점수 텍스트
             
@@ -781,12 +818,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             ///food1
             HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
             SelectObject(hdc, redBrush);
-            Ellipse(hdc, food1.left, food1.top, food1.right, food1.bottom);
+            
             DeleteObject(redBrush);
             ///food2
             HBRUSH yellowBrush = CreateSolidBrush(RGB(255, 255, 0));
             SelectObject(hdc, yellowBrush);
-            Ellipse(hdc, food2.left, food2.top, food2.right, food2.bottom);
+            
             DeleteObject(yellowBrush);
             //적, 적2
             HBRUSH blueBrush = CreateSolidBrush(RGB(0, 0, 255));
